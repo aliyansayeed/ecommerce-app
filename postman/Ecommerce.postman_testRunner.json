@@ -1,0 +1,282 @@
+{
+  "info": {
+    "_postman_id": "7c0e8b23-f5ac-4b3f-8c8e-772e7cfe4a21",
+    "name": "EcommerceApp TestRunner",
+    "description": "End-to-end test runner for EcommerceApp microservices (Cart, Checkout, Order, Discount, Admin).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Cart - Add Item",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"productId\": \"P1001\",\n  \"name\": \"Laptop\",\n  \"quantity\": 1,\n  \"price\": 999.0,\n  \"userId\": \"{{customer_user1}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/cart/{{customer_user1}}/items",
+          "host": ["{{baseUrl}}"],
+          "path": ["cart", "{{customer_user1}}", "items"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Item added to cart\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cart - Get Cart",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/cart/{{customer_user1}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["cart", "{{customer_user1}}"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Cart retrieved\", function () {",
+              "    pm.response.to.have.status(200);",
+              "    let res = pm.response.json();",
+              "    pm.expect(res).to.have.property(\"items\");",
+              "    pm.expect(Array.isArray(res.items)).to.be.true;",
+              "    pm.expect(res.items.length).to.be.above(0);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cart - Checkout",
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "{{baseUrl}}/cart/{{customer_user1}}/checkout",
+          "host": ["{{baseUrl}}"],
+          "path": ["cart", "{{customer_user1}}", "checkout"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Checkout succeeded\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "// Safely handle JSON or plain string",
+              "let body;",
+              "try {",
+              "    body = pm.response.json();",
+              "} catch (e) {",
+              "    body = pm.response.text();",
+              "}",
+              "",
+              "if (typeof body === 'object' && body.order && body.order.orderId) {",
+              "    pm.environment.set(\"orderId\", body.order.orderId);",
+              "    console.log(\"✅ Saved orderId:\", body.order.orderId);",
+              "    if (body.newCoupon) {",
+              "        pm.environment.set(\"couponCode\", body.newCoupon);",
+              "        console.log(\"🎁 Saved couponCode:\", body.newCoupon);",
+              "    }",
+              "} else {",
+              "    console.log(\"ℹ️ Checkout response:\", body);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Order - Get Orders by User",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/order/{{customer_user1}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["order", "{{customer_user1}}"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Orders retrieved by user\", function () {",
+              "    pm.response.to.have.status(200);",
+              "    let res = pm.response.json();",
+              "    pm.expect(Array.isArray(res)).to.be.true;",
+              "",
+              "    if (res.length > 0 && res[0].orderId) {",
+              "        pm.environment.set(\"orderId\", res[0].orderId);",
+              "        console.log(\"✅ Saved orderId from orders list:\", res[0].orderId);",
+              "    } else {",
+              "        console.log(\"⚠️ No orders found to capture orderId\");",
+              "    }",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Order - Get Order by Id",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/order/id/{{orderId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["order", "id", "{{orderId}}"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Order retrieved by ID\", function () {",
+              "    pm.response.to.have.status(200);",
+              "    let res = pm.response.json();",
+              "    pm.expect(res).to.have.property(\"orderId\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Discount - Validate Code",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/discount/validate/{{customer_user1}}/{{couponCode}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["discount", "validate", "{{customer_user1}}", "{{couponCode}}"]
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "let code = pm.environment.get(\"couponCode\");",
+              "if (!code || code === \"null\" || code === \"undefined\") {",
+              "    console.log(\"⚠️ Skipping discount validation (no valid couponCode).\");",
+              "    postman.setNextRequest(\"Discount - All Codes (Admin)\");",
+              "}"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Discount validation returns boolean\", function () {",
+              "    pm.response.to.have.status(200);",
+              "    pm.expect(typeof pm.response.json()).to.eql(\"boolean\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Discount - All Codes (Admin)",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/discount/all",
+          "host": ["{{baseUrl}}"],
+          "path": ["discount", "all"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"All discount codes retrieved\", function () {",
+              "    pm.response.to.have.status(200);",
+              "    let res = pm.response.json();",
+              "    pm.expect(Array.isArray(res)).to.be.true;",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Get Report",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/admin/report",
+          "host": ["{{baseUrl}}"],
+          "path": ["admin", "report"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Admin report contains totals and discounts\", function () {",
+              "    pm.response.to.have.status(200);",
+              "    let res = pm.response.json();",
+              "    pm.expect(res).to.have.property(\"totalOrders\");",
+              "    pm.expect(res).to.have.property(\"totalItems\");",
+              "    pm.expect(res).to.have.property(\"totalPurchaseAmount\");",
+              "    pm.expect(res).to.have.property(\"totalDiscountAmount\");",
+              "    pm.expect(res).to.have.property(\"discountCodes\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Generate Discount (for user)",
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "{{baseUrl}}/admin/discounts/generate/{{customer_user1}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["admin", "discounts", "generate", "{{customer_user1}}"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Admin generated discount\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "let res = pm.response.json();",
+              "if (res.code) {",
+              "    pm.environment.set(\"couponCode\", res.code);",
+              "    console.log(\"🎁 Admin generated couponCode:\", res.code);",
+              "}"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

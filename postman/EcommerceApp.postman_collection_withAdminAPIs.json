@@ -1,0 +1,162 @@
+{
+  "info": {
+    "_postman_id": "ae97605a-96fa-4282-a16c-88209df123ac",
+    "name": "EcommerceApp",
+    "description": "Postman collection for EcommerceApp microservices (Cart, Checkout, Order, Discount, Admin).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Admin - Discounts & Reports",
+      "item": [
+        {
+          "name": "Admin - Generate Discount (for user)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/discounts/generate/{{customer_user1}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "discounts", "generate", "{{customer_user1}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Admin - Get Report",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/report",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "report"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Cart - Add Item",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"productId\": \"P1001\",\n  \"name\": \"Laptop\",\n  \"quantity\": 1,\n  \"price\": 1200.0,\n  \"userId\": \"{{customer_user1}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/cart/{{customer_user1}}/items",
+          "host": ["{{baseUrl}}"],
+          "path": ["cart", "{{customer_user1}}", "items"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Cart - Get Cart",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/cart/{{customer_user1}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["cart", "{{customer_user1}}"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Cart - Checkout",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/cart/{{customer_user1}}/checkout",
+          "host": ["{{baseUrl}}"],
+          "path": ["cart", "{{customer_user1}}", "checkout"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Order - Get Orders by User",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/order/{{customer_user1}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["order", "{{customer_user1}}"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Order - Get Order by Id",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/order/id/{{orderId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["order", "id", "{{orderId}}"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Discount - Validate Code",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/discount/validate/{{customer_user1}}/{{couponCode}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["discount", "validate", "{{customer_user1}}", "{{couponCode}}"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Discount - All Codes (Admin)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/discount/all",
+          "host": ["{{baseUrl}}"],
+          "path": ["discount", "all"]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "admin_user",
+      "value": "admin@uniblox.com"
+    },
+    {
+      "key": "customer_user1",
+      "value": "mohammed@uniblox.com"
+    },
+    {
+      "key": "customer_user2",
+      "value": "surya@uniblox.com"
+    },
+    {
+      "key": "orderId",
+      "value": ""
+    },
+    {
+      "key": "couponCode",
+      "value": ""
+    }
+  ]
+}
