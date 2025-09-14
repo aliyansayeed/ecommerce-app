@@ -1,12 +1,12 @@
-package uniblox.ai.checkoutservice.model;
+package uniblox.ai.common.model;
 
 import java.time.LocalDateTime;
 
-public record CheckoutItem(
+public record OrderItem(
         String productId,
         String name,
-        int quantity,
-        double price,
+        Integer quantity,
+        Double price,
         String userId,
         LocalDateTime addedAt
 ) {}

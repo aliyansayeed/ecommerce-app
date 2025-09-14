@@ -2,10 +2,10 @@ package uniblox.ai.orderservice.service;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import uniblox.ai.orderservice.model.AdminOrdersResponse;
-import uniblox.ai.orderservice.model.Order;
-import uniblox.ai.orderservice.model.OrderItem;
-import uniblox.ai.orderservice.model.OrderStatus;
+import uniblox.ai.common.model.AdminOrdersResponse;
+import uniblox.ai.common.model.Order;
+import uniblox.ai.common.model.OrderItem;
+import uniblox.ai.common.model.OrderStatus;
 
 import java.time.LocalDateTime;
 import java.util.List;

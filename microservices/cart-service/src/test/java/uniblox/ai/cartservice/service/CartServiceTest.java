@@ -5,8 +5,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.web.client.RestTemplate;
 import uniblox.ai.cartservice.model.CartItem;
-import uniblox.ai.cartservice.model.CheckoutResponse;
-import uniblox.ai.cartservice.model.Order;
+import uniblox.ai.common.model.CheckoutResponse;
+import uniblox.ai.common.model.Order;
 
 import java.time.LocalDateTime;
 import java.util.List;

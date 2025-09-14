@@ -2,10 +2,10 @@ package uniblox.ai.orderservice.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import uniblox.ai.orderservice.model.AdminOrdersResponse;
-import uniblox.ai.orderservice.model.Order;
-import uniblox.ai.orderservice.model.OrderItem;
-import uniblox.ai.orderservice.model.OrderStatus;
+import uniblox.ai.common.model.AdminOrdersResponse;
+import uniblox.ai.common.model.Order;
+import uniblox.ai.common.model.OrderItem;
+import uniblox.ai.common.model.OrderStatus;
 import uniblox.ai.orderservice.service.OrderService;
 
 import java.util.List;

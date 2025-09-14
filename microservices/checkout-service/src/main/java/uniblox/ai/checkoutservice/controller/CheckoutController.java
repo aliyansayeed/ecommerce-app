@@ -4,9 +4,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import uniblox.ai.checkoutservice.model.CheckoutItem;
-import uniblox.ai.checkoutservice.model.CheckoutResponse;
 import uniblox.ai.checkoutservice.service.CheckoutService;
+import uniblox.ai.common.model.CheckoutItem;
+import uniblox.ai.common.model.CheckoutResponse;
 
 import java.util.List;
 

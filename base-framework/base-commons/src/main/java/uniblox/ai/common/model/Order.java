@@ -1,4 +1,4 @@
-package uniblox.ai.adminservice.model;
+package uniblox.ai.common.model;
 
 import java.time.LocalDateTime;
 import java.util.List;

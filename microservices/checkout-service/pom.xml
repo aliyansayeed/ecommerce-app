@@ -25,6 +25,13 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>uniblox.ai</groupId>
+            <artifactId>base-commona</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+
+
         <!-- Validation annotations (@NotBlank, @Valid etc.) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

@@ -5,8 +5,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import uniblox.ai.cartservice.model.CartItem;
-import uniblox.ai.cartservice.model.CheckoutItem;
-import uniblox.ai.cartservice.model.CheckoutResponse;
+import uniblox.ai.common.model.CheckoutItem;
+import uniblox.ai.common.model.CheckoutResponse;
 
 import java.time.LocalDateTime;
 import java.util.*;

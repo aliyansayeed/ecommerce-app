@@ -2,7 +2,7 @@ package uniblox.ai.adminservice.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import uniblox.ai.adminservice.model.AdminReportResponse;
+import uniblox.ai.adminservice.dto.AdminReportResponseDto;
 import uniblox.ai.adminservice.service.AdminService;
 
 @RestController
@@ -27,7 +27,7 @@ public class AdminController {
      * Admin report with totals and discounts.
      */
     @GetMapping("/report")
-    public ResponseEntity<AdminReportResponse> getReport() {
+    public ResponseEntity<AdminReportResponseDto> getReport() {
         return ResponseEntity.ok(adminService.getReport());
     }
 }

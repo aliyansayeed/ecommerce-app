@@ -1,4 +1,4 @@
-package uniblox.ai.cartservice.model;
+package uniblox.ai.common.model;
 
 public enum OrderStatus {
     CREATED,

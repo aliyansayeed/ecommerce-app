@@ -1,9 +1,10 @@
-package uniblox.ai.adminservice.model;
+package uniblox.ai.adminservice.dto;
 
-import uniblox.ai.adminservice.model.Discount;
+import uniblox.ai.common.model.Discount;
+
 import java.util.List;
 
-public record AdminReportResponse(
+public record AdminReportResponseDto(
         long totalOrders,
         long totalItems,
         double totalPurchaseAmount,

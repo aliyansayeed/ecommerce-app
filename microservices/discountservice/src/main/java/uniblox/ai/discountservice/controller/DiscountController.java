@@ -1,7 +1,7 @@
 package uniblox.ai.discountservice.controller;
 
 import org.springframework.web.bind.annotation.*;
-import uniblox.ai.discountservice.model.Discount;
+import uniblox.ai.common.model.Discount;
 import uniblox.ai.discountservice.service.DiscountService;
 
 import java.util.List;

@@ -7,8 +7,6 @@ import org.springframework.web.bind.annotation.*;
 import uniblox.ai.cartservice.model.CartItem;
 import uniblox.ai.cartservice.service.CartService;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/cart/{userId}")
 public class CartController {

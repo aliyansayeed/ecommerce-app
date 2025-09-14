@@ -2,7 +2,7 @@ package uniblox.ai.discountservice.service;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import uniblox.ai.discountservice.model.Discount;
+import uniblox.ai.common.model.Discount;
 
 import java.util.List;
 import java.util.Optional;

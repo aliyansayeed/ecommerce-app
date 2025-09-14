@@ -2,11 +2,11 @@ package uniblox.ai.adminservice.service;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import uniblox.ai.adminservice.model.AdminReportResponse;
-import uniblox.ai.adminservice.model.Discount;
-import uniblox.ai.adminservice.model.AdminOrdersResponse;
-import uniblox.ai.adminservice.model.Order;
-import uniblox.ai.adminservice.model.OrderItem;
+import uniblox.ai.adminservice.dto.AdminReportResponseDto;
+import uniblox.ai.common.model.AdminOrdersResponse;
+import uniblox.ai.common.model.Discount;
+import uniblox.ai.common.model.Order;
+import uniblox.ai.common.model.OrderItem;
 
 import java.util.Arrays;
 import java.util.List;
@@ -43,7 +43,7 @@ public class AdminService {
     /**
      * Admin report aggregating from OrderService + DiscountService.
      */
-    public AdminReportResponse getReport() {
+    public AdminReportResponseDto getReport() {
         // fetch all orders
         AdminOrdersResponse[] ordersResponse = restTemplate.getForObject(
                 orderServiceUrl, AdminOrdersResponse[].class);
@@ -76,7 +76,7 @@ public class AdminService {
                 ? Arrays.asList(discountsArr)
                 : List.of();
 
-        return new AdminReportResponse(
+        return new AdminReportResponseDto(
                 totalOrders,
                 totalItems,
                 totalPurchaseAmount,

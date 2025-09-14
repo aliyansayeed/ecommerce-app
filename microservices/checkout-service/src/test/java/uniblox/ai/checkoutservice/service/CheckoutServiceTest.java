@@ -4,11 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.web.client.RestTemplate;
-import uniblox.ai.checkoutservice.model.CheckoutItem;
-import uniblox.ai.checkoutservice.model.CheckoutResponse;
-import uniblox.ai.checkoutservice.model.Order;
-import uniblox.ai.checkoutservice.model.OrderItem;
-import uniblox.ai.checkoutservice.model.OrderStatus;
+import uniblox.ai.common.model.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
