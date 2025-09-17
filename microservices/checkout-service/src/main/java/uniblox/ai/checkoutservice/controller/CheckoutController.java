@@ -1,31 +1,34 @@
 package uniblox.ai.checkoutservice.controller;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import uniblox.ai.checkoutservice.service.CheckoutService;
-import uniblox.ai.common.model.CheckoutItem;
-import uniblox.ai.common.model.CheckoutResponse;
+import uniblox.ai.common.model.dto.ApiResponse;
+import uniblox.ai.common.model.value.CheckoutItem;
 
 import java.util.List;
 
+import static uniblox.ai.common.api.path.CheckoutApiPaths.API_BASE_PATH;
+import static uniblox.ai.common.api.path.CheckoutApiPaths.CHECKOUT_PATH;
+
 @RestController
-@RequestMapping("/checkout")
+@RequestMapping(API_BASE_PATH)
+@RequiredArgsConstructor
 public class CheckoutController {
 
-    private static final Logger log_ = LoggerFactory.getLogger(CheckoutController.class);
+    private final CheckoutService checkoutService;
 
-    @Autowired
-    private CheckoutService checkoutService;
-
-    @PostMapping("/{userId}")
-    public CheckoutResponse checkout(
+    @PostMapping(CHECKOUT_PATH)
+    public ResponseEntity<ApiResponse<?>> checkout(
             @PathVariable String userId,
             @RequestBody List<CheckoutItem> items,
             @RequestParam(required = false) String discountCode
     ) {
-        log_.info("discountCode  = " + discountCode);
-        return checkoutService.checkout(userId.trim(), items, discountCode);
+        ApiResponse<?> response = checkoutService.checkout(userId.trim(), items, discountCode);
+
+        HttpStatus status = response.success() ? HttpStatus.OK : HttpStatus.SERVICE_UNAVAILABLE;
+        return ResponseEntity.status(status).body(response);
     }
 }

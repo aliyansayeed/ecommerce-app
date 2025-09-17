@@ -1,34 +1,41 @@
 package uniblox.ai.cartservice.service;
 
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import uniblox.ai.cartservice.model.CartItem;
-import uniblox.ai.common.model.CheckoutItem;
-import uniblox.ai.common.model.CheckoutResponse;
+import uniblox.ai.common.model.dto.ApiResponse;
+import uniblox.ai.common.model.value.CheckoutItem;
+import uniblox.ai.common.model.dto.CheckoutResponse;
+import uniblox.ai.utils.MessageSourceUtils;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
+@RequiredArgsConstructor
 public class CartService {
 
-    private static final Logger log = LoggerFactory.getLogger(CartService.class);
-
-    private final Map<String, List<CartItem>> cartDB = new HashMap<>();
     private final RestTemplate restTemplate;
+    private final Logger logger;
+    private final MessageSourceUtils messageSourceUtils;
 
-    // ✅ Constructor injection (works with Spring + Mockito)
-    public CartService(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
-    }
+    // in-memory store userId -> List<CartItem>
+    private final Map<String, List<CartItem>> cartDB = new ConcurrentHashMap<>();
+
+    @Value("${checkout-service.url:http://localhost:8080/checkout}")
+    private String checkoutServiceUrl;
 
     /**
      * Add item to the user's cart
      */
-    public Map<String, Object> addItem(String userId, CartItem item) {
-        log.info("Adding item to cart | userId={} | productId={} | quantity={}", userId, item.productId(), item.quantity());
+    public ApiResponse<?> addItem(String userId, CartItem item) {
+        logger.info(messageSourceUtils.getMessage("log.cart.add", userId, item.productId(), item.quantity()));
 
         CartItem newItem = new CartItem(
                 item.productId(),
@@ -41,28 +48,37 @@ public class CartService {
 
         cartDB.computeIfAbsent(userId, k -> new ArrayList<>()).add(newItem);
 
-        return Map.of("userId", userId, "items", cartDB.get(userId));
+        return ApiResponse.success(
+                messageSourceUtils.getMessage("cart.item.added"),
+                Map.of("userId", userId, "items", cartDB.get(userId))
+        );
     }
 
     /**
      * Get all items from a user's cart
      */
-    public Map<String, Object> getCart(String userId) {
+    public ApiResponse<?> getCart(String userId) {
+        logger.info(messageSourceUtils.getMessage("log.cart.fetch", userId));
+
         List<CartItem> items = cartDB.getOrDefault(userId, Collections.emptyList());
-        return Map.of("userId", userId, "items", items);
+        return ApiResponse.success(
+                messageSourceUtils.getMessage("cart.item.fetch.success"),
+                Map.of("userId", userId, "items", items)
+        );
     }
 
     /**
      * Checkout all items in the user's cart
      */
-    public String checkout(String userId, String discountCode) {
-        log.info("Initiating checkout | userId={}", userId);
+    @Retry(name = "default")
+    @CircuitBreaker(name = "default", fallbackMethod = "checkoutFallback")
+    public ApiResponse<?> checkout(String userId, String discountCode) {
+        logger.info(messageSourceUtils.getMessage("log.cart.checkout.start", userId));
 
         List<CartItem> items = cartDB.getOrDefault(userId, Collections.emptyList());
 
         if (items.isEmpty()) {
-            log.warn("Checkout attempted with empty cart for userId={}", userId);
-            return "Cart is empty";
+            return ApiResponse.failure(messageSourceUtils.getMessage("cart.empty"));
         }
 
         // Transform CartItem -> CheckoutItem
@@ -78,33 +94,29 @@ public class CartService {
             ));
         }
 
-        try {
-            String checkoutServiceUrl = "http://localhost:8080/checkout/" + userId + "?discountCode=" + discountCode;
+        CheckoutResponse response = restTemplate.postForObject(
+                checkoutServiceUrl + "/" + userId + "?discountCode=" + discountCode,
+                checkoutItems,
+                CheckoutResponse.class
+        );
 
-            CheckoutResponse response = restTemplate.postForObject(
-                    checkoutServiceUrl, checkoutItems, CheckoutResponse.class);
+        if (response != null && response.order() != null) {
+            // Clear cart after successful checkout
+            cartDB.remove(userId);
 
-            if (response != null && response.order() != null) {
-                int cartSize = response.order().items() != null ? response.order().items().size() : 0;
-                log.info("Checkout successful | userId={} | cartsize={} | orderId={}",
-                        userId, cartSize, response.order().orderId());
-
-                // ✅ Clear cart after successful checkout
-                cartDB.remove(userId);
-
-                if (response.newCoupon() != null) {
-                    return "Checkout successful for user: " + userId +
-                            ". You earned a new coupon: " + response.newCoupon();
-                }
-                return "Checkout successful for user: " + userId;
-            } else {
-                log.error("Checkout failed: empty response for userId={}", userId);
-                return "Checkout failed: empty response";
-            }
-
-        } catch (Exception e) {
-            log.error("Checkout failed for userId={} | error={}", userId, e.getMessage(), e);
-            return "Checkout failed: " + e.getMessage();
+            logger.info(messageSourceUtils.getMessage("log.cart.checkout.success", userId, response.order().orderId()));
+            return ApiResponse.success(
+                    messageSourceUtils.getMessage("cart.checkout.success", userId),
+                    response
+            );
         }
+
+        logger.error(messageSourceUtils.getMessage("log.cart.checkout.failed", userId, "empty response"));
+        return ApiResponse.failure(messageSourceUtils.getMessage("cart.checkout.failed", userId, "empty response"));
+    }
+
+    private ApiResponse<?> checkoutFallback(String userId, String discountCode, Throwable t) {
+        logger.error(messageSourceUtils.getMessage("log.cart.checkout.failed", userId, t.getMessage()));
+        return ApiResponse.failure(messageSourceUtils.getMessage("cart.checkout.failed", userId, t.getMessage()));
     }
 }

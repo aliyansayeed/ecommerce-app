@@ -15,11 +15,11 @@
     <name>base-framework</name>
     <url>http://maven.apache.org</url>
     <modules>
-        <module>base-config</module>
-        <module>base-utils</module>
-        <module>base-filters</module>
         <module>base-commons</module>
+        <module>base-config</module>
         <module>base-core</module>
+        <module>base-filter</module>
+        <module>base-util</module>
         <module>base-test</module>
     </modules>
 

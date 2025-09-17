@@ -1,42 +1,50 @@
 package uniblox.ai.cartservice.controller;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import uniblox.ai.cartservice.model.CartItem;
 import uniblox.ai.cartservice.service.CartService;
+import uniblox.ai.common.model.dto.ApiResponse;
+
+import static uniblox.ai.common.api.path.CartApiPaths.*;
 
 @RestController
-@RequestMapping("/cart/{userId}")
+@RequestMapping(API_BASE_PATH)
+@RequiredArgsConstructor
 public class CartController {
-
-    private static final Logger log_ = LoggerFactory.getLogger(CartController.class);
-
 
     private final CartService cartService;
 
-    public CartController(CartService cartService) {
-        this.cartService = cartService;
-    }
-
     // Add item to cart
-    @PostMapping("/items")
-    public ResponseEntity<?> addItem(@PathVariable String userId, @RequestBody CartItem item) {
-        return ResponseEntity.ok(cartService.addItem(userId.trim(), item));
+    @PostMapping(ITEMS_PATH)
+    public ResponseEntity<ApiResponse<?>> addItem(@PathVariable String userId, @RequestBody CartItem item) {
+        ApiResponse<?> response = cartService.addItem(userId.trim(), item);
+        return buildResponse(response);
     }
 
     // Get cart items
-    @GetMapping
-    public ResponseEntity<?> getCart(@PathVariable String userId) {
-        return ResponseEntity.ok(cartService.getCart(userId.trim()));
+    @GetMapping(CART_PATH)
+    public ResponseEntity<ApiResponse<?>> getCart(@PathVariable String userId) {
+        ApiResponse<?> response = cartService.getCart(userId.trim());
+        return buildResponse(response);
     }
 
     // Checkout
-    @PostMapping("/checkout")
-    public ResponseEntity<?> checkout(@PathVariable String userId, @RequestParam(required = false) String discountCode
-    ) {
-        log_.info("discountCode from cartController "+discountCode);
-        return ResponseEntity.ok(cartService.checkout(userId.trim(), discountCode));
+    @PostMapping(CHECKOUT_PATH)
+    public ResponseEntity<ApiResponse<?>> checkout(
+            @PathVariable String userId,
+            @RequestParam(required = false) String discountCode) {
+
+        ApiResponse<?> response = cartService.checkout(userId.trim(), discountCode);
+        return buildResponse(response);
+    }
+
+    private ResponseEntity<ApiResponse<?>> buildResponse(ApiResponse<?> response) {
+        HttpStatus status = (response != null && response.success())
+                ? HttpStatus.OK
+                : HttpStatus.SERVICE_UNAVAILABLE;
+        return ResponseEntity.status(status).body(response);
     }
 }

@@ -2,16 +2,46 @@ spring:
   application:
     name: admin-service
 
-
 server:
   port: 8085
 
-
-
+# ======================
+# Eureka configuration
+# ======================
 eureka:
   client:
+    # 🔹 Toggle for local testing vs Eureka mode
+    register-with-eureka: false   # set to true when using Eureka
+    fetch-registry: false         # set to true when using Eureka
     service-url:
       defaultZone: http://localhost:8761/eureka/
 
+# ======================
+# Actuator health + Resilience4j exposure
+# ======================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,resilience4j.circuitbreakers,resilience4j.retries,resilience4j.ratelimiters,resilience4j.bulkheads
+  health:
+    circuitbreakers:
+      enabled: true
+  endpoint:
+    health:
+      show-details: always
 
+#########################################
+#ADMIN-SERVICE
+order-service:
+  url: http://localhost:8084/order/all-orders
+
+discount-service:
+  url: http://localhost:8083/discount
+
+
+
+  messages:
+    basename: messages
+    encoding: UTF-8
 

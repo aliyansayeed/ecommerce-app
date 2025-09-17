@@ -1,40 +1,49 @@
 package uniblox.ai.checkoutservice.service;
 
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-//import uniblox.ai.checkoutservice.model.*;
-import uniblox.ai.common.model.*;
+import uniblox.ai.common.model.dto.ApiResponse;
+import uniblox.ai.common.model.dto.CheckoutResponse;
+import uniblox.ai.common.model.entity.Discount;
+import uniblox.ai.common.model.entity.Order;
+import uniblox.ai.common.model.entity.OrderItem;
+import uniblox.ai.common.model.value.CheckoutItem;
+import uniblox.ai.common.model.value.OrderStatus;
+import uniblox.ai.utils.MessageSourceUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class CheckoutService {
 
-    private static final Logger log = LoggerFactory.getLogger(CheckoutService.class);
-
     private final RestTemplate restTemplate;
+    private final Logger log;
+    private final MessageSourceUtils messageSourceUtils;
 
-    // OrderService URL (via API Gateway or direct)
-    private final String orderServiceUrl = "http://localhost:8080/order";
+    @Value("${order-service.url}")
+    private String orderServiceUrl;
 
-    // DiscountService URL
-    private final String discountServiceUrl = "http://localhost:8080/discount";
+    @Value("${discount-service.url}")
+    private String discountServiceUrl;
 
-    public CheckoutService(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
-    }
-
-    public CheckoutResponse checkout(String userId, List<CheckoutItem> items, String discountCode)
-    {
+    @Retry(name = "default")
+    @CircuitBreaker(name = "default", fallbackMethod = "checkoutFallback")
+    public ApiResponse<CheckoutResponse> checkout(String userId, List<CheckoutItem> items, String discountCode) {
         if (items == null || items.isEmpty()) {
-            throw new IllegalArgumentException("Cart is empty");
+            log.warn("Cart is empty for userId={}", userId);
+            return ApiResponse.failure(messageSourceUtils.getMessage("checkout.empty", userId));
         }
 
-        log.info(" inside checkout discountCod {} " ,discountCode);
+        log.info(" inside checkout discountCod {} ", discountCode);
+
         // 1️⃣ Calculate total amount
         double totalAmount = items.stream()
                 .mapToDouble(item -> item.price() * item.quantity())
@@ -51,12 +60,9 @@ public class CheckoutService {
             log.info("zubedi.1111111111111111111..............................................");
             log.info("zubedi.1111111111111111111..............................................");
             log.info("zubedi.1111111111111111111..............................................");
-            log.info("zubedi.1111111111111111111..............................................");
-            log.info("zubedi.1111111111111111111..............................................");
-            log.info("zubedi.1111111111111111111..............................................");
 
             if (Boolean.TRUE.equals(valid)) {
-                log.info("zubedi.insdie validate block..............................................");
+                log.info("zubedi.inside validate block..............................................");
 
                 discountAmount = totalAmount * 0.10; // apply 10% discount
                 log.info("✅ Valid coupon applied | userId={} | code={} | discount={} | final={}",
@@ -65,25 +71,19 @@ public class CheckoutService {
                 log.warn("⚠️ Invalid or already used coupon | userId={} | code={}", userId, discountCode);
             }
             log.info("zubedi.2222222222222222..............................................");
-            log.info("zubedi.2222222222222222..............................................");
-            log.info("zubedi.2222222222222222..............................................");
-            log.info("zubedi.2222222222222222..............................................");
-            log.info("zubedi.2222222222222222..............................................");
 
         } else {
             log.info("ℹ️ No coupon provided | userId={}", userId);
         }
-        log.info("zubedi.setting final amout..............................................");
-        log.info("zubedi.discount amout is.."+discountAmount);
-        log.info("zubedi.total amout is.."+totalAmount);
 
+        log.info("zubedi.setting final amout..............................................");
+        log.info("zubedi.discount amout is.." + discountAmount);
+        log.info("zubedi.total amout is.." + totalAmount);
 
         double finalAmount = totalAmount - discountAmount;
+        log.info("zubedi.final amout is.." + finalAmount);
 
-        log.info("zubedi.final amout is.."+finalAmount);
-
-
-        // 3️⃣ Build order request
+        // 3️⃣ Build order request (kept intact, even if not directly used)
         Order orderRequest = new Order(
                 null,
                 userId,
@@ -96,12 +96,13 @@ public class CheckoutService {
                 LocalDateTime.now()
         );
 
-        // 4️⃣ Save order via OrderService
+        // 4️⃣ Save order via OrderService (now sending finalAmount too)
         Order createdOrder = restTemplate.postForObject(
                 orderServiceUrl + "/" + userId
                         + "?totalAmount=" + totalAmount
                         + "&discountCode=" + (discountCode != null ? discountCode : "")
-                        + "&discountAmount=" + discountAmount,
+                        + "&discountAmount=" + discountAmount
+                        + "&finalAmount=" + finalAmount,
                 toOrderItems(items),
                 Order.class
         );
@@ -117,7 +118,14 @@ public class CheckoutService {
             log.info("🎁 New coupon generated for userId={} | code={}", userId, newCoupon.code());
         }
 
-        return new CheckoutResponse(createdOrder, newCoupon != null ? newCoupon.code() : null);
+        CheckoutResponse response = new CheckoutResponse(createdOrder, newCoupon != null ? newCoupon.code() : null);
+
+        return ApiResponse.success(messageSourceUtils.getMessage("checkout.success"), response);
+    }
+
+    private ApiResponse<CheckoutResponse> checkoutFallback(String userId, List<CheckoutItem> items, String discountCode, Throwable t) {
+        log.error(messageSourceUtils.getMessage("log.checkout.failed", userId, t.getMessage()));
+        return ApiResponse.failure(messageSourceUtils.getMessage("checkout.failed"));
     }
 
     private List<OrderItem> toOrderItems(List<CheckoutItem> items) {
@@ -132,9 +140,4 @@ public class CheckoutService {
                 ))
                 .collect(Collectors.toList());
     }
-
-    // Inner records for response mapping
-    public record Discount(String code, double percentage, boolean used, LocalDateTime createdAt) {}
-
-  //  public record CheckoutResponse(Order order, String newCoupon) {}
 }

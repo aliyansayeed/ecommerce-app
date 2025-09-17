@@ -55,7 +55,7 @@ class AdminServiceTest {
                 .thenReturn(discounts);
 
         // When
-        AdminReportResponseDto report = adminService.getReport();
+        AdminReportResponse report = adminService.getReport();
 
         // Then
         assertThat(report.totalOrders()).isEqualTo(2);

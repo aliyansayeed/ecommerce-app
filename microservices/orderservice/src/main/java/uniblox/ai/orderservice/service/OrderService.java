@@ -1,28 +1,42 @@
 package uniblox.ai.orderservice.service;
 
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import uniblox.ai.common.model.AdminOrdersResponse;
-import uniblox.ai.common.model.Order;
-import uniblox.ai.common.model.OrderItem;
-import uniblox.ai.common.model.OrderStatus;
+import uniblox.ai.common.model.dto.AdminOrdersResponse;
+import uniblox.ai.common.model.dto.ApiResponse;
+import uniblox.ai.common.model.entity.Order;
+import uniblox.ai.common.model.entity.OrderItem;
+import uniblox.ai.common.model.value.OrderStatus;
+import uniblox.ai.utils.MessageSourceUtils;
 
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * Core Order service with resilience, externalized messages, and ApiResponse wrapper.
+ */
 @Service
+@RequiredArgsConstructor
 public class OrderService {
 
-    private static final Logger log = LoggerFactory.getLogger(OrderService.class);
+    private final Logger logger;
+    private final MessageSourceUtils messageSourceUtils;
 
     // in-memory store orderId -> Order
     private final Map<String, Order> orders = new ConcurrentHashMap<>();
 
-    // create and persist order; returns saved Order
-    public Order createOrder(String userId, List<OrderItem> items,
-                             double totalAmount, String discountCode, double discountAmount) {
+    // --- Create Order ---
+    @Retry(name = "default")
+    @CircuitBreaker(name = "default", fallbackMethod = "createOrderFallback")
+    public ApiResponse<Order> createOrder(String userId, List<OrderItem> items,
+                                          double totalAmount, String discountCode, double discountAmount) {
+
+        logger.info(messageSourceUtils.getMessage("log.order.create", userId));
+
         String orderId = UUID.randomUUID().toString();
         double finalAmount = totalAmount - discountAmount;
 
@@ -40,55 +54,67 @@ public class OrderService {
 
         orders.put(orderId, order);
 
-        if (discountAmount > 0) {
-            log.info("✅ Order created with DISCOUNT | orderId={} | userId={} | total={} | discount={} | final={}",
-                    orderId, userId, totalAmount, discountAmount, finalAmount);
-        } else {
-            log.info("📦 Order created without discount | orderId={} | userId={} | total={} | final={}",
-                    orderId, userId, totalAmount, finalAmount);
-        }
-
-        return order;
+        logger.info(messageSourceUtils.getMessage("log.order.success", orderId));
+        return ApiResponse.success(messageSourceUtils.getMessage("order.create.success"), order);
     }
-    // add orders for admin //
 
-    public List<AdminOrdersResponse> getAllOrders() {
-        log.info("🔍 Retrieving all orders");
-        AdminOrdersResponse response = null;//new AdminOrdersResponse();
-        var list = new ArrayList<AdminOrdersResponse>();
+    private ApiResponse<Order> createOrderFallback(String userId, List<OrderItem> items,
+                                                   double totalAmount, String discountCode, double discountAmount, Throwable t) {
+        logger.error(messageSourceUtils.getMessage("log.order.failed", t.getMessage()));
+        return ApiResponse.failure(messageSourceUtils.getMessage("order.unavailable"));
+    }
+
+    // --- Fetch all (for Admin) ---
+    public ApiResponse<List<AdminOrdersResponse>> getAllOrders() {
+        logger.info(messageSourceUtils.getMessage("log.order.fetch.all"));
+
+        List<AdminOrdersResponse> list = new ArrayList<>();
         for (Order o : orders.values()) {
-            response = new AdminOrdersResponse();
-            response.setOrderId(o.orderId());
-            response.setOrders(o);
-             list.add(response);
+            AdminOrdersResponse resp = new AdminOrdersResponse();
+            resp.setOrderId(o.orderId());
+            resp.setOrders(o);
+            list.add(resp);
         }
-       // list.sort(Comparator.comparing(Order::createdAt).reversed());
-       // log.info("📊 Found {} orders for user {}", list.size(), userId);
-        return list;
+
+        return ApiResponse.success(messageSourceUtils.getMessage("order.fetch.success"), list);
     }
 
-    public List<Order> getOrdersByUser(String userId) {
-        log.info("🔍 Retrieving orders for user {}", userId);
-        var list = new ArrayList<Order>();
-        for (Order o : orders.values()) {
-            if (Objects.equals(o.userId(), userId)) list.add(o);
+    // --- Fetch by User ---
+    public ApiResponse<List<Order>> getOrdersByUser(String userId) {
+        logger.info(messageSourceUtils.getMessage("log.order.fetch.byuser", userId));
+
+        List<Order> list = orders.values().stream()
+                .filter(o -> Objects.equals(o.userId(), userId))
+                .sorted(Comparator.comparing(Order::createdAt).reversed())
+                .toList();
+
+        if (list.isEmpty()) {
+            return ApiResponse.failure(messageSourceUtils.getMessage("order.user.notfound", userId));
         }
-        list.sort(Comparator.comparing(Order::createdAt).reversed());
-        log.info("📊 Found {} orders for user {}", list.size(), userId);
-        return list;
+
+        return ApiResponse.success(messageSourceUtils.getMessage("order.fetch.byuser.success", userId), list);
     }
 
-    public Optional<Order> getOrderById(String orderId) {
-        log.info("🔍 Fetching order by ID {}", orderId);
-        return Optional.ofNullable(orders.get(orderId));
+    // --- Fetch by ID ---
+    public ApiResponse<Order> getOrderById(String orderId) {
+        logger.info(messageSourceUtils.getMessage("log.order.fetch.byid", orderId));
+
+        Order order = orders.get(orderId);
+        if (order == null) {
+            return ApiResponse.failure(messageSourceUtils.getMessage("order.notfound", orderId));
+        }
+
+        return ApiResponse.success(messageSourceUtils.getMessage("order.fetch.byid.success", orderId), order);
     }
 
-    public Optional<Order> updateOrderStatus(String orderId, OrderStatus status) {
+    // --- Update order status ---
+    public ApiResponse<Order> updateOrderStatus(String orderId, OrderStatus status) {
         Order old = orders.get(orderId);
         if (old == null) {
-            log.warn("⚠️ Attempted to update status for non-existent orderId={}", orderId);
-            return Optional.empty();
+            logger.warn(messageSourceUtils.getMessage("log.order.notfound.update", orderId));
+            return ApiResponse.failure(messageSourceUtils.getMessage("order.notfound", orderId));
         }
+
         Order updated = new Order(
                 old.orderId(),
                 old.userId(),
@@ -100,13 +126,9 @@ public class OrderService {
                 status,
                 old.createdAt()
         );
-        orders.put(orderId, updated);
-        log.info("🔄 Updated order status | orderId={} | newStatus={}", orderId, status);
-        return Optional.of(updated);
-    }
 
-   //  todo below must remove after test
-    public Map<String, Order> getOrdersAllOrders() {
-        return  orders;
+        orders.put(orderId, updated);
+        logger.info(messageSourceUtils.getMessage("log.order.update", orderId, status));
+        return ApiResponse.success(messageSourceUtils.getMessage("order.update.success", orderId), updated);
     }
 }

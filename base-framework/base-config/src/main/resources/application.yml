@@ -1,0 +1,56 @@
+# ======================
+# HTTP client defaults (custom)
+# ======================
+http:
+  connect-timeout-ms: 2000   # RestTemplate/WebClient connect timeout
+  read-timeout-ms: 5000      # RestTemplate/WebClient read timeout
+
+# ======================
+# Resilience4j defaults
+# ======================
+resilience4j:
+  retry:
+    instances:
+      default:
+        max-attempts: 3
+        wait-duration: 500ms
+        retry-exceptions:
+          - org.springframework.web.client.ResourceAccessException
+          - java.io.IOException
+        ignore-exceptions:
+          - java.lang.IllegalArgumentException
+
+  circuitbreaker:
+    instances:
+      default:
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 20
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        record-exceptions:
+          - org.springframework.web.client.ResourceAccessException
+          - java.io.IOException
+
+  ratelimiter:
+    instances:
+      default:
+        limit-for-period: 10       # max requests per refresh period
+        limit-refresh-period: 1s
+        timeout-duration: 500ms    # wait max before rejecting
+
+  bulkhead:
+    instances:
+      default:
+        max-concurrent-calls: 20   # max parallel calls allowed
+
+# ======================
+# Logging defaults
+# ======================
+logging:
+  level:
+    root: INFO
+    uniblox.ai: DEBUG
+    org.springframework.web: INFO
+    org.hibernate.SQL: WARN
+    io.github.resilience4j.retry: DEBUG
+    io.github.resilience4j.circuitbreaker: DEBUG

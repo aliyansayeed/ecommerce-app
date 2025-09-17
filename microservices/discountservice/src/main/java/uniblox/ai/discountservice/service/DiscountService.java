@@ -1,18 +1,23 @@
 package uniblox.ai.discountservice.service;
 
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import uniblox.ai.common.model.Discount;
+import uniblox.ai.common.model.entity.Discount;
+import uniblox.ai.utils.MessageSourceUtils;
 
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
+@RequiredArgsConstructor
 public class DiscountService {
 
-    private static final Logger log = LoggerFactory.getLogger(DiscountService.class);
+    private final Logger logger;
+    private final MessageSourceUtils messageSourceUtils;
 
     // store all discount codes (code -> Discount)
     private final Map<String, Discount> discountCodes = new ConcurrentHashMap<>();
@@ -20,57 +25,74 @@ public class DiscountService {
     // per-user order counters (userId -> number of orders placed)
     private final Map<String, Integer> orderCounters = new ConcurrentHashMap<>();
 
-    // every Nth order gets a coupon
+    // every Nth order gets a coupon (can move to config later)
     private static final int NTH_ORDER = 3;
 
     /**
      * Generate discount code for a user after their nth order.
-     * The coupon is created at checkout time and can be applied on a future order.
      */
+    @Retry(name = "default")
+    @CircuitBreaker(name = "default", fallbackMethod = "generateDiscountFallback")
     public Optional<Discount> generateDiscountForOrder(String userId) {
         int currentCount = orderCounters.getOrDefault(userId, 0) + 1;
         orderCounters.put(userId, currentCount);
 
-        log.info("📊 User {} has now placed {} orders", userId, currentCount);
+        logger.info(messageSourceUtils.getMessage("log.discountsvc.orders.count", userId, currentCount));
 
         if (currentCount % NTH_ORDER == 0) {
             String code = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
             Discount discount = new Discount(code, 10.0, false, LocalDateTime.now());
             discountCodes.put(code, discount);
 
-            log.info("🎉 Generated discount for user {} | code={} | percentage={}%",
-                    userId, code, discount.percentage());
+            logger.info(messageSourceUtils.getMessage("log.discountsvc.generated", userId, code, discount.percentage()));
             return Optional.of(discount);
         }
 
         return Optional.empty();
     }
 
+    private Optional<Discount> generateDiscountFallback(String userId, Throwable t) {
+        logger.error(messageSourceUtils.getMessage("log.discountsvc.unavailable", userId, t.getMessage()));
+        return Optional.empty();
+    }
+
     /**
      * Validate and mark discount code as used.
      */
+    @Retry(name = "default")
+    @CircuitBreaker(name = "default", fallbackMethod = "validateDiscountFallback")
     public boolean validateDiscountCode(String userId, String code) {
         Discount discount = discountCodes.get(code);
 
         if (discount != null && !discount.used()) {
-            // mark as used
             discountCodes.put(
                     code,
                     new Discount(discount.code(), discount.percentage(), true, discount.createdAt())
             );
-
-            log.info("✅ Discount code={} applied successfully for user={}", code, userId);
+            logger.info(messageSourceUtils.getMessage("log.discountsvc.valid", code, userId));
             return true;
         }
 
-        log.warn("❌ Invalid or already used discount code={} for user={}", code, userId);
+        logger.warn(messageSourceUtils.getMessage("log.discountsvc.invalid", code, userId));
+        return false;
+    }
+
+    private boolean validateDiscountFallback(String userId, String code, Throwable t) {
+        logger.error(messageSourceUtils.getMessage("log.discountsvc.validation.failed", code, userId, t.getMessage()));
         return false;
     }
 
     /**
      * For admin reporting: get all discount codes.
      */
+    @Retry(name = "default")
+    @CircuitBreaker(name = "default", fallbackMethod = "allDiscountsFallback")
     public List<Discount> getAllDiscountCodes() {
         return new ArrayList<>(discountCodes.values());
+    }
+
+    private List<Discount> allDiscountsFallback(Throwable t) {
+        logger.error(messageSourceUtils.getMessage("log.discountsvc.fetch.failed", t.getMessage()));
+        return List.of();
     }
 }
