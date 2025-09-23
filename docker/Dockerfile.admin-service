@@ -1,0 +1,19 @@
+# Stage 1: Build using cached base-framework
+FROM ecommerce-app:latest AS builder
+WORKDIR /app
+
+# Copy only what admin-service needs
+COPY pom.xml .
+COPY base-framework ./base-framework
+COPY microservices ./microservices
+COPY infra-services ./infra-services
+
+# Build admin-service (reusing already-installed base-framework from ecommerce-app:latest)
+RUN mvn -pl microservices/admin-service -am clean package -DskipTests
+
+# Stage 2: Runtime
+FROM eclipse-temurin:17-jre
+WORKDIR /app
+
+COPY --from=builder /app/microservices/admin-service/target/admin-service-*.jar app.jar
+ENTRYPOINT ["java", "-jar", "app.jar"]

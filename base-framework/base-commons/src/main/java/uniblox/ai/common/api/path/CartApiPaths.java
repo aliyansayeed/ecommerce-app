@@ -14,3 +14,4 @@ public final class CartApiPaths {
     public static final String CART_PATH = "/{userId}";
     public static final String CHECKOUT_PATH = "/{userId}/checkout";
 }
+

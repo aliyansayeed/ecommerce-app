@@ -1,7 +1,8 @@
 package uniblox.ai.common.model.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import uniblox.ai.common.model.entity.Order;
-
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class AdminOrdersResponse {
 
     private String orderId;

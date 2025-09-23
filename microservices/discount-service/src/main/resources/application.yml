@@ -1,0 +1,48 @@
+spring:
+  application:
+    name: DISCOUNT-SERVICE   #
+
+server:
+  port: 8080   # inside container always runs on 8080 for local change it to 8083 /4
+
+# ================================
+# Local setup
+# ================================
+# eureka:
+#   client:
+#     service-url:
+#       defaultZone: http://localhost:8761/eureka/
+
+# ================================
+# Docker setup
+# ================================
+eureka:
+  client:
+    service-url:
+      defaultZone: http://discovery-ser:8761/eureka/
+  instance:
+    hostname: ${HOSTNAME}       # Docker container name
+    prefer-ip-address: true
+    non-secure-port: 8080
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+
+# ================================
+# Custom properties
+# ================================
+#n-th:
+#  order: 2   # default;
+number-of-order-processed:
+   orders: 2
+# ================================
+# i18n Messages
+# ================================
+messages:
+  basename: messages
+  encoding: UTF-8
+
+# ================================
+# HTTP Timeouts
+# ================================
+#http:
+#  connect-timeout-ms: 2000   # 2 seconds
+#  read-timeout-ms: 5000      # 5 seconds

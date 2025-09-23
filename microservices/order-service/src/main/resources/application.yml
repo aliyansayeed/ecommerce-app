@@ -1,0 +1,41 @@
+spring:
+  application:
+    name: ORDER-SERVICE   #
+
+server:
+  port: 8080   # inside container always runs on 8080 -- use 8084 for local setup
+
+# ================================
+# Local setup
+# ================================
+# eureka:
+#   client:
+#     service-url:
+#       defaultZone: http://localhost:8761/eureka/
+
+# ================================
+# Docker setup
+# ================================
+eureka:
+  client:
+    service-url:
+      defaultZone: http://discovery-ser:8761/eureka/
+  instance:
+    hostname: ${HOSTNAME}       # Docker sets this to "order-service"
+    prefer-ip-address: true
+    non-secure-port: 8080
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+
+# ================================
+# i18n Messages
+# ================================
+messages:
+  basename: messages
+  encoding: UTF-8
+
+# ================================
+# HTTP Timeouts   - below values has been set into base-config folder for centralized configuration
+# ================================
+#http:
+#  connect-timeout-ms: 2000   # 2 seconds
+#  read-timeout-ms: 5000      # 5 seconds

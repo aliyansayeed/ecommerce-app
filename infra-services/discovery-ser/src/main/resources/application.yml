@@ -13,10 +13,18 @@ eureka:
   server:
     enable-self-preservation: false
 
+  # ================================
+  # Local setup (when running outside Docker)
+  # ================================
+  # instance:
+  #   hostname: 127.0.0.1
+  #   serviceUrl:
+  #     defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/
 
-
+  # ================================
+  # Docker setup (when running inside docker-compose)
+  # ================================
   instance:
-    hostname: 127.0.0.1
-
+    hostname: discovery-ser
     serviceUrl:
       defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/

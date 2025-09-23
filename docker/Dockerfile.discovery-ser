@@ -1,0 +1,20 @@
+FROM ecommerce-app:latest AS builder
+WORKDIR /app
+
+# Copy all modules
+COPY pom.xml .
+COPY base-framework ./base-framework
+COPY microservices ./microservices
+COPY infra-services ./infra-services
+
+# Build discovery-ser from infra-services
+RUN mvn -pl infra-services/discovery-ser -am clean package -DskipTests
+
+# Runtime image
+FROM eclipse-temurin:17-jre
+WORKDIR /app
+
+# Copy final jar
+COPY --from=builder /app/infra-services/discovery-ser/target/discovery-ser-*.jar app.jar
+
+ENTRYPOINT ["java", "-jar", "app.jar"]

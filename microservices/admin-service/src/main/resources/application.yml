@@ -1,24 +1,28 @@
 spring:
   application:
-    name: admin-service
+    name: ADMIN-SERVICE
 
 server:
-  port: 8085
+  port: 8080
 
-# ======================
-# Eureka configuration
-# ======================
+# ================================
+# Docker Eureka setup
+# ================================
 eureka:
   client:
-    # 🔹 Toggle for local testing vs Eureka mode
-    register-with-eureka: false   # set to true when using Eureka
-    fetch-registry: false         # set to true when using Eureka
+    register-with-eureka: true
+    fetch-registry: true
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: http://discovery-ser:8761/eureka/
+  instance:
+    hostname: ${HOSTNAME}
+    prefer-ip-address: true
+    non-secure-port: 8080
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
 
-# ======================
-# Actuator health + Resilience4j exposure
-# ======================
+# ================================
+# Actuator + Resilience4j exposure
+# ================================
 management:
   endpoints:
     web:
@@ -31,17 +35,35 @@ management:
     health:
       show-details: always
 
-#########################################
-#ADMIN-SERVICE
+# ================================
+# External Service URLs
+# ================================
 order-service:
-  url: http://localhost:8084/order/all-orders
+  url: http://order-service:8080/api/v1/orders/all
 
 discount-service:
-  url: http://localhost:8083/discount
+  url: http://discount-service:8080/api/v1/discounts
 
+# ================================
+# i18n Messages
+# ================================
+messages:
+  basename: messages
+  encoding: UTF-8
 
+# ================================
+# Redis
+# ================================
+cache:
+  type: redis
+data:
+  redis:
+    host: redis
+    port: 6379
 
-  messages:
-    basename: messages
-    encoding: UTF-8
-
+# ================================
+# HTTP Timeouts
+# ================================
+#http:
+#  connect-timeout-ms: 2000   # 2 seconds
+#  read-timeout-ms: 5000      # 5 seconds

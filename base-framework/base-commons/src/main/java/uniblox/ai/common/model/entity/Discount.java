@@ -10,8 +10,4 @@ public record Discount(
         boolean used,
         LocalDateTime createdAt
 
-      //    String code,
-        //double percentage, // 10% discount
-        //boolean used,
-        //LocalDateTime createdAt
 ) {}

@@ -7,7 +7,7 @@ public final class CheckoutApiPaths {
 
     private CheckoutApiPaths() {}
 
-    public static final String API_BASE_PATH = "/api/v1/cart/{userId}";
+    public static final String API_BASE_PATH = "/api/v1/checkout/{userId}";
 
     // --- Endpoints ---
     public static final String ITEMS_PATH = "/items";

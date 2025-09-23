@@ -1,17 +1,20 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
     <modelVersion>4.0.0</modelVersion>
+
     <parent>
         <groupId>uniblox.ai</groupId>
         <artifactId>base-framework</artifactId>
         <version>1.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>base-commona</artifactId>
+    <artifactId>base-commons</artifactId>
     <packaging>jar</packaging>
 
-    <name>base-logging</name>
-    <url>http://maven.apache.org</url>
+    <name>base-commons</name>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
@@ -20,18 +23,14 @@
     </properties>
 
     <dependencies>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>3.8.1</version>
-            <scope>test</scope>
-        </dependency>
+        <!-- Jackson annotations for DTOs -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-annotations</artifactId>
-            <version>2.15.2</version> <!-- pick latest stable -->
+            <version>2.15.2</version>
         </dependency>
 
+        <!-- Jakarta validation API (for Bean Validation annotations like @NotNull, etc.) -->
         <dependency>
             <groupId>jakarta.validation</groupId>
             <artifactId>jakarta.validation-api</artifactId>

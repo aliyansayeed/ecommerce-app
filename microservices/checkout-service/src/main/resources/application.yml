@@ -1,17 +1,61 @@
 spring:
   application:
-    name: checkout-service
-
+    name: CHECKOUT-SERVICE
 
 server:
-  port: 8082
+  port: 8080   # inside container always runs on 8080 - for local setup change to 8082
 
+# ======================
+# Eureka configuration
+# ======================
 
+# Local setup
+# eureka:
+#   client:
+#     register-with-eureka: true
+#     fetch-registry: true
+#     service-url:
+#       defaultZone: http://localhost:8761/eureka/
 
+# Docker setup
 eureka:
   client:
+    register-with-eureka: true   # values can on and off  (true vs false) for local independent testing
+    fetch-registry: true
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: http://discovery-ser:8761/eureka/
+  instance:
+    hostname: ${HOSTNAME}       # Docker container name
+    prefer-ip-address: true
+    non-secure-port: 8080
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
 
+#########################################
+# CHECKOUT-SERVICE external service URLs
+#########################################
 
+# Local setup
+# order-service:
+#   url: http://localhost:8084/api/v1/orders
+# discount-service:
+#   url: http://localhost:8083/api/v1/discounts
 
+# Docker setup
+order-service:
+  url: http://order-service:8080/api/v1/orders
+discount-service:
+  url: http://discount-service:8080/api/v1/discounts
+
+# ======================
+# i18n Messages
+# ======================
+messages:
+  basename: messages
+  encoding: UTF-8
+
+# ======================
+# HTTP Timeouts
+# ======================
+#http:
+#  connect-timeout-ms: 2000   # 2 seconds
+#  read-timeout-ms: 5000      # 5 seconds

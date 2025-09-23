@@ -1,0 +1,16 @@
+# Stage 1: Build base-framework
+FROM maven:3.9.6-eclipse-temurin-17 AS base-builder
+WORKDIR /app
+
+# Copy everything so Maven sees all modules (base-framework, microservices, infra-services)
+COPY . .
+
+# Build only base-framework modules and install them into local Maven repo
+RUN mvn -pl base-framework -am clean install -DskipTests
+
+# Stage 2: Final base image (Maven + cached base-framework jars)
+FROM maven:3.9.6-eclipse-temurin-17
+WORKDIR /root/.m2
+
+# Copy Maven repository from builder stage
+COPY --from=base-builder /root/.m2 /root/.m2

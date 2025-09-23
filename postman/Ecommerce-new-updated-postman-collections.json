@@ -1,0 +1,235 @@
+{
+  "info": {
+    "_postman_id": "ae97605a-96fa-4282-a16c-88209df123ac",
+    "name": "EcommerceApp",
+    "description": "Postman collection for EcommerceApp microservices (Cart, Checkout, Order, Discount, Admin) routed via API Gateway.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Admin Service",
+      "item": [
+        {
+          "name": "Generate Discount for User",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/generate/{{customer_user1}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","v1","admin","generate","{{customer_user1}}"]
+            }
+          }
+        },
+        {
+          "name": "Get All Discounts",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/all",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","v1","admin","all"]
+            }
+          }
+        },
+        {
+          "name": "Get Reports",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/reports",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","v1","admin","reports"]
+            }
+          }
+        },
+        {
+          "name": "Get User Discounts",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/users/{{customer_user1}}/discounts",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","v1","admin","users","{{customer_user1}}","discounts"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cart Service",
+      "item": [
+        {
+          "name": "Get Cart",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cart/{{customer_user1}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","v1","cart","{{customer_user1}}"]
+            }
+          }
+        },
+        {
+          "name": "Add Item to Cart",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"P1001\",\n  \"name\": \"Laptop\",\n  \"quantity\": 1,\n  \"price\": 1200.0,\n  \"userId\": \"{{customer_user1}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cart/{{customer_user1}}/items",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","v1","cart","{{customer_user1}}","items"]
+            }
+          }
+        },
+        {
+          "name": "Checkout Cart",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cart/{{customer_user1}}/checkout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","v1","cart","{{customer_user1}}","checkout"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Checkout Service",
+      "item": [
+        {
+          "name": "Checkout for User",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cart/{{customer_user1}}/checkout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","v1","cart","{{customer_user1}}","checkout"]
+            }
+          }
+        },
+        {
+          "name": "Get Items for Checkout",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cart/{{customer_user1}}/items",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","v1","cart","{{customer_user1}}","items"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Discount Service",
+      "item": [
+        {
+          "name": "Generate Discount for User",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/discounts/generate/{{customer_user1}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","v1","discounts","generate","{{customer_user1}}"]
+            }
+          }
+        },
+        {
+          "name": "Get All Discounts",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/discounts/all",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","v1","discounts","all"]
+            }
+          }
+        },
+        {
+          "name": "Get Discount by Id",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/discounts/{{discountId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","v1","discounts","{{discountId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Order Service",
+      "item": [
+        {
+          "name": "Create Order",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","v1","orders"]
+            }
+          }
+        },
+        {
+          "name": "Get Order by Id",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders/{{orderId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","v1","orders","{{orderId}}"]
+            }
+          }
+        },
+        {
+          "name": "Get All Orders",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders/all",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","v1","orders","all"]
+            }
+          }
+        },
+        {
+          "name": "Get Orders by User",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders/user/{{customer_user1}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","v1","orders","user","{{customer_user1}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Order Status",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders/{{orderId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","v1","orders","{{orderId}}","status"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "admin_user", "value": "admin@uniblox.com" },
+    { "key": "customer_user1", "value": "mohammed@uniblox.com" },
+    { "key": "customer_user2", "value": "surya@uniblox.com" },
+    { "key": "orderId", "value": "" },
+    { "key": "discountId", "value": "" }
+  ]
+}

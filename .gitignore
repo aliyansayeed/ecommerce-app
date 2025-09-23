@@ -17,3 +17,16 @@ out/
 # OS files
 .DS_Store
 Thumbs.db
+
+
+microservices/discount-service/.gitattributes
+microservices/discount-service/.gitignore
+microservices/discount-service/.mvn/
+microservices/discount-service/mvnw
+microservices/discount-service/mvnw.cmd
+
+microservices/*/.gitattributes
+microservices/*/.gitignore
+microservices/*/.mvn/
+microservices/*/mvnw
+microservices/*/mvnw.cmd

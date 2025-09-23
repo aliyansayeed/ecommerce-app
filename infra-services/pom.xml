@@ -1,6 +1,9 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
     <modelVersion>4.0.0</modelVersion>
+
     <parent>
         <groupId>uniblox.ai</groupId>
         <artifactId>ecommerce-app</artifactId>
@@ -8,22 +11,17 @@
     </parent>
 
     <artifactId>infra-services</artifactId>
-    <packaging>jar</packaging>
+    <packaging>pom</packaging>
 
     <name>infra-services</name>
-    <url>http://maven.apache.org</url>
+
+    <modules>
+        <module>api-gateway</module>
+        <module>config-ser</module>
+        <module>discovery-ser</module>
+    </modules>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
-    <dependencies>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-autoconfigure</artifactId>
-            <version>3.5.5</version>
-            <scope>compile</scope>
-        </dependency>
-    </dependencies>
-
-
 </project>

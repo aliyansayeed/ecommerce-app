@@ -11,51 +11,100 @@ spring:
 
     gateway:
       routes:
+        # ================================
+        # Local setup
+        # ================================
+        # - id: cart-service
+        #   uri: http://localhost:8081
+        #   predicates:
+        #     - Path=/cart/**
+        #   filters:
+        #     - StripPrefix=0
+        # - id: checkout-service
+        #   uri: http://localhost:8082
+        #   predicates:
+        #     - Path=/checkout/**
+        #   filters:
+        #     - StripPrefix=0
+        # - id: discount-service
+        #   uri: http://localhost:8083
+        #   predicates:
+        #     - Path=/discount/**
+        #   filters:
+        #     - StripPrefix=0
+        # - id: order-service
+        #   uri: http://localhost:8084
+        #   predicates:
+        #     - Path=/order/**
+        #   filters:
+        #     - StripPrefix=0
+        # - id: admin-service
+        #   uri: http://localhost:8085
+        #   predicates:
+        #     - Path=/admin/**
+        #   filters:
+        #     - StripPrefix=0
+
+        # ================================
+        # Docker setup  via Eureka)
+        # ================================
         - id: cart-service
-          #uri: lb://CART-SERVICE  Need to setup
-          ##Add an entry so DESKTOP-1MC66TN.mshome.net resolves to your local machine IP (e.g., 127.0.0.1).
-          #
-          #Example (Windows C:\Windows\System32\drivers\etc\hosts):
-          # Map host in /etc/hosts
-          uri: http://localhost:8081      # Direct backend URL, bypass Eureka
+          uri: lb://CART-SERVICE
           predicates:
-            - Path=/cart/**
+            - Path=/api/v1/cart/**
           filters:
             - StripPrefix=0
+
+        # Actuator route for cart-service
+        - id: cart-actuator
+          uri: lb://CART-SERVICE
+          predicates:
+            - Path=/cart/actuator/**
+          filters:
+            - StripPrefix=1
+
         - id: checkout-service
-          uri: http://localhost:8082
+          uri: lb://CHECKOUT-SERVICE
           predicates:
             - Path=/checkout/**
           filters:
             - StripPrefix=0
         - id: discount-service
-          uri: http://localhost:8083
+          uri: lb://DISCOUNT-SERVICE
           predicates:
             - Path=/discount/**
           filters:
             - StripPrefix=0
         - id: order-service
-          uri: http://localhost:8084
+          uri: lb://ORDER-SERVICE
           predicates:
             - Path=/order/**
           filters:
             - StripPrefix=0
         - id: admin-service
-          uri: http://localhost:8085
+          uri: lb://ADMIN-SERVICE
           predicates:
-            - Path=/admin/**
+            - Path=/api/v1/admin/**
           filters:
             - StripPrefix=0
 
-# Eureka configuration
+# ================================
+# Local setup
+# ================================
+# eureka:
+#   client:
+#     service-url:
+#       defaultZone: http://localhost:8761/eureka/
+
+# ================================
+# Docker setup
+# ================================
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: http://discovery-ser:8761/eureka/
 
 # Logging
 logging:
   level:
     org.springframework.cloud.gateway: DEBUG
-
-

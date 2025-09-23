@@ -21,6 +21,8 @@ public class AdminController {
 
     private final AdminService adminService;
 
+     // /api/v1/admin/users/mohammed@uniblox.com/discounts
+
     /**
      * Trigger discount generation for a user.
      */

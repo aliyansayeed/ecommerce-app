@@ -3,8 +3,12 @@ package uniblox.ai.adminservice.service;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -20,36 +24,26 @@ import uniblox.ai.utils.MessageSourceUtils;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * Admin operations: generate discounts and build reports.
- * Uses:
- *  - API paths from AdminApiPaths
- *  - User-facing + log messages from messages.properties
- *  - Resilience4j for retries/circuit breakers
- */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AdminService {
 
     private final RestTemplate restTemplate;
     private final WebClient.Builder webClientBuilder;
-    private final Logger logger;
     private final MessageSourceUtils messageSourceUtils;
+    private final RedisTemplate<String, Object> redisTemplate;
 
-    // Defaults kick in if not provided in application.yml / config-server
-    @Value("${order-service.url:http://localhost:8084/order/all-orders}")
+    @Value("${order-service.url:http://localhost:8084/orders/all}")
     private String orderServiceUrl;
 
-    @Value("${discount-service.url:http://localhost:8083/discount}")
+    @Value("${discount-service.url:http://localhost:8083/discounts}")
     private String discountServiceUrl;
 
-    /**
-     * Generate discount for a user (admin-triggered).
-     */
     @Retry(name = "default")
     @CircuitBreaker(name = "default", fallbackMethod = "generateDiscountFallback")
     public ApiResponse<?> generateDiscount(String userId) {
-        logger.info(messageSourceUtils.getMessage("log.discount.request", userId));
+      //  log.info(messageSourceUtils.getMessage("log.discount.request", new Object[]{userId}));
 
         Discount discount = restTemplate.postForObject(
                 discountServiceUrl + AdminApiPaths.DISCOUNT_GENERATE_PATH + userId,
@@ -58,34 +52,27 @@ public class AdminService {
         );
 
         if (discount == null) {
-            logger.warn(messageSourceUtils.getMessage("log.discount.none", userId));
+          //  log.warn(messageSourceUtils.getMessage("log.discount.none", new Object[]{userId}));
             return ApiResponse.failure(messageSourceUtils.getMessage("discount.not.eligible"));
         }
 
-        logger.info(messageSourceUtils.getMessage("log.discount.success", discount.code()));
+     //   log.info(messageSourceUtils.getMessage("log.discount.success", new Object[]{discount.code()}));
         return ApiResponse.success(messageSourceUtils.getMessage("discount.success"), discount);
     }
 
     private ApiResponse<?> generateDiscountFallback(String userId, Throwable t) {
-        logger.error(messageSourceUtils.getMessage("log.discount.unavailable", userId, t.getMessage()));
+       // log.error(messageSourceUtils.getMessage("log.discount.unavailable", new Object[]{userId, t.getMessage()}));
         return ApiResponse.failure(messageSourceUtils.getMessage("discount.unavailable"));
     }
 
-    /**
-     * Admin report aggregating from OrderService + DiscountService.
-     */
     @Retry(name = "default")
     @CircuitBreaker(name = "default", fallbackMethod = "getReportFallback")
+    @Cacheable(value = "adminReports", key = "'latestReport'")
     public ApiResponse<AdminReportResponse> getReport() {
-        logger.info(messageSourceUtils.getMessage("log.orders.fetch"));
+       // log.info(messageSourceUtils.getMessage("log.orders.fetch"));
 
-        // --- fetch all orders (RestTemplate) ---
-        AdminOrdersResponse[] ordersResponse = restTemplate.getForObject(
-                orderServiceUrl, AdminOrdersResponse[].class);
-
-        List<AdminOrdersResponse> orders = ordersResponse != null
-                ? Arrays.asList(ordersResponse)
-                : List.of();
+        AdminOrdersResponse[] ordersResponse = restTemplate.getForObject(orderServiceUrl, AdminOrdersResponse[].class);
+        List<AdminOrdersResponse> orders = ordersResponse != null ? Arrays.asList(ordersResponse) : List.of();
 
         long totalOrders = orders.size();
         long totalItems = 0;
@@ -103,9 +90,8 @@ public class AdminService {
             }
         }
 
-        logger.info(messageSourceUtils.getMessage("log.discounts.fetch"));
+      //  log.info(messageSourceUtils.getMessage("log.discounts.fetch"));
 
-        // --- fetch all discounts (WebClient) ---
         List<Discount> discounts = webClientBuilder.build()
                 .get()
                 .uri(discountServiceUrl + AdminApiPaths.DISCOUNT_ALL_PATH)
@@ -114,9 +100,7 @@ public class AdminService {
                 .collectList()
                 .block();
 
-        if (discounts == null) {
-            discounts = List.of();
-        }
+        if (discounts == null) discounts = List.of();
 
         AdminReportResponse report = new AdminReportResponse(
                 totalOrders,
@@ -126,12 +110,17 @@ public class AdminService {
                 discounts
         );
 
-        logger.info(messageSourceUtils.getMessage("log.report.success"));
-        return ApiResponse.success(messageSourceUtils.getMessage("report.success"), report);
+      //  log.info(messageSourceUtils.getMessage("log.report.success"));
+        return ApiResponse.success("successful",report);//messageSourceUtils.getMessage("report.success"), report);
     }
 
     private ApiResponse<AdminReportResponse> getReportFallback(Throwable t) {
-        logger.error(messageSourceUtils.getMessage("log.report.failed", t.getMessage()));
-        return ApiResponse.failure(messageSourceUtils.getMessage("report.unavailable"));
+     //   log.error(messageSourceUtils.getMessage("log.report.failed", new Object[]{t.getMessage()}));
+        return ApiResponse.failure("unavailable orders");//messageSourceUtils.getMessage("report.unavailable"));
+    }
+
+    @CacheEvict(value = "adminReports", key = "'latestReport'")
+    public void evictReportCache() {
+        log.info("🧹 Admin report cache cleared");
     }
 }

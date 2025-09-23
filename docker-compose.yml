@@ -1,0 +1,137 @@
+services:
+  # =========================
+  # Infra Services
+  # =========================
+
+  discovery-ser:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.discovery-ser
+    container_name: discovery-ser
+    ports:
+      - "8761:8761"
+    networks:
+      - ecommerce-net
+
+  config-ser:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.config-ser
+    container_name: config-ser
+    ports:
+      - "8888:8888"
+    networks:
+      - ecommerce-net
+    depends_on:
+      - discovery-ser
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api-gateway
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    networks:
+      - ecommerce-net
+    depends_on:
+      - discovery-ser
+      - config-ser
+
+  # =========================
+  # Microservices
+  # =========================
+
+  admin-service:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.admin-service
+    container_name: admin-service
+    ports:
+      - "8085:8080"
+    networks:
+      - ecommerce-net
+    depends_on:
+      - discovery-ser
+      - config-ser
+      - redis
+    volumes:
+      - ~/.m2:/root/.m2
+
+  cart-service:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.cart-service
+    container_name: cart-service
+    ports:
+      - "8081:8080"
+    networks:
+      - ecommerce-net
+    depends_on:
+      - discovery-ser
+      - config-ser
+    volumes:
+      - ~/.m2:/root/.m2
+
+  checkout-service:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.checkout-service
+    container_name: checkout-service
+    ports:
+      - "8082:8080"
+    networks:
+      - ecommerce-net
+    depends_on:
+      - discovery-ser
+      - config-ser
+    volumes:
+      - ~/.m2:/root/.m2
+
+  discount-service:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.discount-service
+    container_name: discount-service
+    ports:
+      - "8083:8080"
+    networks:
+      - ecommerce-net
+    depends_on:
+      - discovery-ser
+      - config-ser
+    volumes:
+      - ~/.m2:/root/.m2
+
+  order-service:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.order-service
+    container_name: order-service
+    ports:
+      - "8084:8080"
+    networks:
+      - ecommerce-net
+    depends_on:
+      - discovery-ser
+      - config-ser
+    volumes:
+      - ~/.m2:/root/.m2
+
+  # =========================
+  # Redis (only used by admin-service for now)
+  # =========================
+  redis:
+    image: redis:7.2
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - ecommerce-net
+
+# =========================
+# Networks
+# =========================
+networks:
+  ecommerce-net:
+    driver: bridge

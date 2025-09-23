@@ -4,16 +4,19 @@
                              http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
+
     <parent>
         <groupId>uniblox.ai</groupId>
         <artifactId>ecommerce-app</artifactId>
         <version>1.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
+
     <artifactId>base-framework</artifactId>
     <packaging>pom</packaging>
+
     <name>base-framework</name>
-    <url>http://maven.apache.org</url>
+
     <modules>
         <module>base-commons</module>
         <module>base-config</module>
@@ -22,5 +25,9 @@
         <module>base-util</module>
         <module>base-test</module>
     </modules>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
 
 </project>

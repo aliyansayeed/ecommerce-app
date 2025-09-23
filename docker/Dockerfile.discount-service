@@ -1,0 +1,19 @@
+# Stage 1: Build using cached base-framework
+FROM ecommerce-app:latest AS builder
+WORKDIR /app
+
+# Copy only what discount-service needs
+COPY pom.xml .
+COPY base-framework ./base-framework
+COPY microservices ./microservices
+COPY infra-services ./infra-services
+
+# Build discount-service (reusing already-installed base-framework from ecommerce-app:latest)
+RUN mvn -pl microservices/discount-service -am clean package -DskipTests
+
+# Stage 2: Runtime
+FROM eclipse-temurin:17-jre
+WORKDIR /app
+
+COPY --from=builder /app/microservices/discount-service/target/discount-service-*.jar app.jar
+ENTRYPOINT ["java", "-jar", "app.jar"]

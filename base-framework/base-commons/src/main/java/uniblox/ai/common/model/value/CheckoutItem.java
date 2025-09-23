@@ -12,10 +12,4 @@ public record CheckoutItem(
         String userId,
         LocalDateTime addedAt
 
-        //String productId,
-        //String name,
-       // int quantity,
-        //double price,
-        //String userId,
-        //LocalDateTime addedAt
 ) {}

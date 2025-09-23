@@ -1,29 +1,29 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
-                             https://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.2.0</version>
-        <relativePath/>
+        <groupId>uniblox.ai</groupId>
+        <artifactId>infra-services</artifactId>
+        <version>1.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <groupId>uniblox.ai</groupId>
-    <artifactId>discovery-service</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
-    <name>discovery-service</name>
+    <artifactId>discovery-ser</artifactId>
+    <packaging>jar</packaging>
+
+    <name>discovery-ser</name>
     <description>Discovery Service - Eureka Server</description>
 
     <properties>
         <java.version>17</java.version>
-        <spring-cloud.version>2025.0.0</spring-cloud.version>
+        <spring-cloud.version>2023.0.0</spring-cloud.version>
     </properties>
 
     <dependencies>
-        <!-- Spring Boot Web -->
+        <!-- Spring Boot Web (for Eureka dashboard / REST endpoints) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -35,13 +35,13 @@
             <artifactId>spring-cloud-starter-netflix-eureka-server</artifactId>
         </dependency>
 
-        <!-- Actuator -->
+        <!-- Actuator (health, metrics) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
-        <!-- DevTools (optional) -->
+        <!-- DevTools (optional for local dev) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-devtools</artifactId>
@@ -49,12 +49,14 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- Test -->
-        <!--<dependency>
+        <!-- Uncomment if you add tests -->
+        <!--
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
-        </dependency>-->
+        </dependency>
+        -->
     </dependencies>
 
     <dependencyManagement>
@@ -66,22 +68,27 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-            <dependency>
-                <groupId>org.springframework.cloud</groupId>
-                <artifactId>spring-cloud-dependencies</artifactId>
-                <version>2023.0.0</version> <!-- This version works with Spring Boot 3.x -->
-                <scope>import</scope>
-                <type>pom</type>
-            </dependency>
-
         </dependencies>
     </dependencyManagement>
 
     <build>
         <plugins>
+            <!-- Spring Boot plugin -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
